@@ -30,4 +30,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 # docker-compose.yml override this CMD with their own celery command, so
 # migrations only run once (from the backend container), not once per
 # worker replica.
-CMD ["./docker/entrypoint.sh"]
+CMD ["/app/docker/entrypoint.sh"]
+

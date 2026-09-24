@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     APP_NAME: str = "CloudVault"
     ENV: str = "development"
 
+    # for mail
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_USE_TLS: bool = True
     # --- Monitoring ---
     # Empty by default: Sentry stays fully inactive until a real DSN is set.
     # No code changes needed to turn it on later - just set the env var.
