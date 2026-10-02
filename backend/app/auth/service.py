@@ -20,7 +20,7 @@ from app.security.rate_limit import (
 )
 from app.users.models import User
 from app.utils.activity_log import log_activity
-from app.workers.tasks import send_otp_email
+from app.workers.tasks import send_email_otp
 
 settings = get_settings()
 
@@ -97,7 +97,7 @@ def _issue_otp(
     db.commit()
 
     # Send OTP asynchronously through Celery.
-    send_otp_email.delay(
+    send_email_otp.delay(
         user.email,
         code,
         purpose,

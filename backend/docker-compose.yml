@@ -1,18 +1,20 @@
-version: "3.9"
-
 services:
   mysql:
     image: mysql:8.0
     restart: unless-stopped
+
     environment:
       MYSQL_DATABASE: cloudvault
       MYSQL_USER: cloudvault
-      MYSQL_PASSWORD: cloudvault
+      MYSQL_PASSWORD: saurabh@123
       MYSQL_ROOT_PASSWORD: rootpassword
+
     ports:
       - "3307:3306"
+
     volumes:
       - mysql_data:/var/lib/mysql
+
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 10s
@@ -22,8 +24,10 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+
     ports:
       - "6379:6379"
+
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -34,21 +38,27 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+
     restart: unless-stopped
+
     environment:
-      DATABASE_URL: mysql+pymysql://cloudvault:cloudvault@mysql:3306/cloudvault
+      DATABASE_URL: mysql+pymysql://cloudvault:saurabh%40123@mysql:3306/cloudvault
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
+
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-CHANGE_ME_SUPER_SECRET}
       FILE_ENCRYPTION_KEY: ${FILE_ENCRYPTION_KEY:-CHANGE_ME_32_BYTE_KEY_BASE64___}
+
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+
     volumes:
       - storage_data:/data/storage
+
     ports:
       - "8000:8000"
 
@@ -56,20 +66,33 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+
     restart: unless-stopped
+
     command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+
     environment:
-      DATABASE_URL: mysql+pymysql://cloudvault:cloudvault@mysql:3306/cloudvault
+      DATABASE_URL: mysql+pymysql://cloudvault:saurabh%40123@mysql:3306/cloudvault
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
+
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-CHANGE_ME_SUPER_SECRET}
       FILE_ENCRYPTION_KEY: ${FILE_ENCRYPTION_KEY:-CHANGE_ME_32_BYTE_KEY_BASE64___}
+
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+      SMTP_USE_TLS: ${SMTP_USE_TLS}
+
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+
     volumes:
       - storage_data:/data/storage
 
@@ -77,24 +100,43 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+
     restart: unless-stopped
-    command: celery -A app.workers.celery_app beat --loglevel=info
+
+    command: celery -A app.workers.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+
     environment:
-      DATABASE_URL: mysql+pymysql://cloudvault:cloudvault@mysql:3306/cloudvault
+      DATABASE_URL: mysql+pymysql://cloudvault:saurabh%40123@mysql:3306/cloudvault
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
+
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+      SMTP_USE_TLS: ${SMTP_USE_TLS}
+
     depends_on:
-      - redis
-      - mysql
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    volumes:
+      - storage_data:/data/storage
 
   nginx:
     image: nginx:1.27-alpine
     restart: unless-stopped
+
     volumes:
       - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+
     ports:
       - "80:80"
+
     depends_on:
       - backend
 
